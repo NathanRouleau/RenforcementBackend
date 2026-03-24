@@ -1,6 +1,9 @@
+const { User } = require('../models');
+
 const getAllUsers = (req, res) => {
+    const users = User.findAll();
     res.status(200).json({ 
-        user: []
+        users
     });
 };
 

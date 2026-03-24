@@ -33,7 +33,9 @@ const User = (Sequelize, DataTypes) => {
         },
         {
             sequelize: dbInstance,
-            modelName: 'User'
+            modelName: 'User',
+            tableName: 'User',
+            timestamps: false
         }
     )
 
