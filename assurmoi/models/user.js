@@ -2,7 +2,14 @@ const { Model, DataTypes } = require('sequelize');
 const { dbInstance } = require('.');
 
 const User = (Sequelize, DataTypes) => {
-    class User extends Model {}
+    class User extends Model {
+        // static associate(models) {
+        //     this.belongsTo(models.Person, {
+        //         foreignKey: 'personId',
+        //         as: 'person'
+        //     })
+        // }
+    }
     
     User.init(
         {
@@ -29,7 +36,7 @@ const User = (Sequelize, DataTypes) => {
             modelName: 'User'
         }
     )
-    
+
     return User;
 }
 
