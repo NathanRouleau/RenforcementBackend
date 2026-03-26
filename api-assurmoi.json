@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "AssurMoi API",
+    "description": "Collection de requêtes pour l'API de gestion des sinistres AssurMoi.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Roles",
+      "item": [
+        {
+          "name": "Get all Roles",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/roles", "host": ["{{baseUrl}}"], "path": ["roles"] } }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"label\": \"Gestionnaire\"\n}" },
+            "url": { "raw": "{{baseUrl}}/roles", "host": ["{{baseUrl}}"], "path": ["roles"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Users",
+      "item": [
+        {
+          "name": "Get all Users",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] } }
+        },
+        {
+          "name": "Get User by ID",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/users/1", "host": ["{{baseUrl}}"], "path": ["users", "1"] } }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role_id\": 1,\n  \"username\": \"jdoe\",\n  \"password\": \"motdepasse123\",\n  \"firstname\": \"John\",\n  \"lastname\": \"Doe\",\n  \"email\": \"jdoe@assurmoi.fr\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"firstname\": \"Johnny\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users/1", "host": ["{{baseUrl}}"], "path": ["users", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Assurés",
+      "item": [
+        {
+          "name": "Get all Assures",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/assures", "host": ["{{baseUrl}}"], "path": ["assures"] } }
+        },
+        {
+          "name": "Create Assure",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": 2,\n  \"numero_client\": \"CLI-002\",\n  \"adresse\": \"12 Rue de la Paix, Paris\",\n  \"telephone\": \"0601020304\"\n}" },
+            "url": { "raw": "{{baseUrl}}/assures", "host": ["{{baseUrl}}"], "path": ["assures"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Contrats",
+      "item": [
+        {
+          "name": "Get all Contrats",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/contrats", "host": ["{{baseUrl}}"], "path": ["contrats"] } }
+        },
+        {
+          "name": "Create Contrat",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"numero_contrat\": \"CTR-002\",\n  \"assure_id\": 1,\n  \"type_couverture\": \"Tous risques\",\n  \"franchise\": 250.00,\n  \"statut\": \"Actif\",\n  \"date_souscription\": \"2025-01-01T10:00:00Z\"\n}" },
+            "url": { "raw": "{{baseUrl}}/contrats", "host": ["{{baseUrl}}"], "path": ["contrats"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Sinistres",
+      "item": [
+        {
+          "name": "Get all Sinistres",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/sinistres", "host": ["{{baseUrl}}"], "path": ["sinistres"] } }
+        },
+        {
+          "name": "Get Sinistre by ID",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/sinistres/1", "host": ["{{baseUrl}}"], "path": ["sinistres", "1"] } }
+        },
+        {
+          "name": "Create Sinistre",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"assure_id\": 1,\n  \"contrat_id\": 1,\n  \"charge_clientele_id\": 1,\n  \"immatriculation_vehicule\": \"AB-123-CD\",\n  \"nom_prenom_conducteur\": \"Nathan Rouleau\",\n  \"is_conducteur_assure\": true,\n  \"date_heure_sinistre\": \"2026-03-25T08:30:00Z\",\n  \"contexte\": \"Accident sur le parking du supermarché.\",\n  \"responsabilite_engagee\": true,\n  \"pourcentage_responsabilite\": 50,\n  \"statut\": \"Brouillon\"\n}" },
+            "url": { "raw": "{{baseUrl}}/sinistres", "host": ["{{baseUrl}}"], "path": ["sinistres"] }
+          }
+        },
+        {
+          "name": "Update Sinistre",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"statut\": \"En attente de validation\"\n}" },
+            "url": { "raw": "{{baseUrl}}/sinistres/1", "host": ["{{baseUrl}}"], "path": ["sinistres", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Dossiers",
+      "item": [
+        {
+          "name": "Get all Dossiers",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/dossiers", "host": ["{{baseUrl}}"], "path": ["dossiers"] } }
+        },
+        {
+          "name": "Create Dossier",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"numero_dossier\": \"DOS-002\",\n  \"sinistre_id\": 1,\n  \"charge_suivi_id\": 1,\n  \"statut_courant\": \"Dossier initialisé\",\n  \"scenario\": \"1\"\n}" },
+            "url": { "raw": "{{baseUrl}}/dossiers", "host": ["{{baseUrl}}"], "path": ["dossiers"] }
+          }
+        },
+        {
+          "name": "Update Dossier (Étape suivante)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"statut_courant\": \"Expertise planifiée\",\n  \"date_expertise_planifiee\": \"2026-03-30T14:00:00Z\"\n}" },
+            "url": { "raw": "{{baseUrl}}/dossiers/1", "host": ["{{baseUrl}}"], "path": ["dossiers", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Documents",
+      "item": [
+        {
+          "name": "Get all Documents",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/documents", "host": ["{{baseUrl}}"], "path": ["documents"] } }
+        },
+        {
+          "name": "Create Document",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"sinistre_id\": 1,\n  \"type_document\": \"carte_grise\",\n  \"chemin_fichier\": \"/uploads/carte_grise_ab123cd.pdf\",\n  \"est_valide\": false\n}" },
+            "url": { "raw": "{{baseUrl}}/documents", "host": ["{{baseUrl}}"], "path": ["documents"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Action Logs",
+      "item": [
+        {
+          "name": "Get all Action Logs",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/action-logs", "host": ["{{baseUrl}}"], "path": ["action-logs"] } }
+        },
+        {
+          "name": "Create Action Log",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": 1,\n  \"entite_concernee\": \"Sinistre\",\n  \"entite_id\": 1,\n  \"action\": \"STATUS_CHANGE\",\n  \"details\": \"Le sinistre est passé en statut Validé\"\n}" },
+            "url": { "raw": "{{baseUrl}}/action-logs", "host": ["{{baseUrl}}"], "path": ["action-logs"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
