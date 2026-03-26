@@ -1,21 +1,21 @@
 const { ActionLog, dbInstance } = require('../models');
 
 const getAllActionLogs = async (req, res) => {
-    const ActionLogs = await ActionLog.findAll();
-    res.status(200).json({ ActionLogs });
+    const actionLogs = await ActionLog.findAll();
+    res.status(200).json({ actionLogs });
 };
 
 const getActionLog = async (req, res) => {
-    const ActionLog = await ActionLog.findByPk(req.params.id);
-    res.status(200).json({ ActionLog });
+    const actionLog = await ActionLog.findByPk(req.params.id);
+    res.status(200).json({ actionLog });
 };
 
 const createActionLog = async (req, res) => {
     const transaction = await dbInstance.transaction();
     try {
-        const ActionLog = await ActionLog.create(req.body, { transaction });
+        const actionLog = await ActionLog.create(req.body, { transaction });
         await transaction.commit();
-        res.status(201).json({ ActionLog });
+        res.status(201).json({ actionLog });
     } catch (err) {
         await transaction.rollback();
         res.status(400).json({ message: err.message });

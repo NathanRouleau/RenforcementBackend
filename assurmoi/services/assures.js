@@ -13,9 +13,9 @@ const getAssure = async (req, res) => {
 const createAssure = async (req, res) => {
     const transaction = await dbInstance.transaction();
     try {
-        const Assure = await Assure.create(req.body, { transaction });
+        const assure = await Assure.create(req.body, { transaction });
         await transaction.commit();
-        res.status(201).json({ Assure });
+        res.status(201).json({ assure });
     } catch (err) {
         await transaction.rollback();
         res.status(400).json({ message: err.message });

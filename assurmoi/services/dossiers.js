@@ -1,21 +1,21 @@
 const { Dossier, dbInstance } = require('../models');
 
 const getAllDossiers = async (req, res) => {
-    const Dossiers = await Dossier.findAll();
-    res.status(200).json({ Dossiers });
+    const dossiers = await Dossier.findAll();
+    res.status(200).json({ dossiers });
 };
 
 const getDossier = async (req, res) => {
-    const Dossier = await Dossier.findByPk(req.params.id);
-    res.status(200).json({ Dossier });
+    const dossier = await Dossier.findByPk(req.params.id);
+    res.status(200).json({ dossier });
 };
 
 const createDossier = async (req, res) => {
     const transaction = await dbInstance.transaction();
     try {
-        const Dossier = await Dossier.create(req.body, { transaction });
+        const dossier = await Dossier.create(req.body, { transaction });
         await transaction.commit();
-        res.status(201).json({ Dossier });
+        res.status(201).json({ dossier });
     } catch (err) {
         await transaction.rollback();
         res.status(400).json({ message: err.message });

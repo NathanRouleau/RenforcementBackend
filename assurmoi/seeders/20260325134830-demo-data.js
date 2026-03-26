@@ -3,12 +3,6 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    // 1. Roles
-    await queryInterface.bulkInsert('Role', [
-      { label: 'Admin' },
-      { label: 'Assure' }
-    ]);
-
     // 2. Users (Attention, la table s'appelle Users)
     await queryInterface.bulkInsert('Users', [
       { id: 1, username: 'admin', password: 'password123', firstname: 'Super', lastname: 'Admin', email: 'admin@assurmoi.fr' },
@@ -54,6 +48,5 @@ module.exports = {
     await queryInterface.bulkDelete('Contrat', null, {});
     await queryInterface.bulkDelete('Assure', null, {});
     await queryInterface.bulkDelete('Users', null, {});
-    await queryInterface.bulkDelete('Role', null, {});
   }
 };

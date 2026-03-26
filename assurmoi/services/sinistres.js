@@ -1,21 +1,21 @@
 const { Sinistre, dbInstance } = require('../models');
 
 const getAllSinistres = async (req, res) => {
-    const Sinistres = await Sinistre.findAll();
-    res.status(200).json({ Sinistres });
+    const sinistres = await Sinistre.findAll();
+    res.status(200).json({ sinistres });
 };
 
 const getSinistre = async (req, res) => {
-    const Sinistre = await Sinistre.findByPk(req.params.id);
-    res.status(200).json({ Sinistre });
+    const sinistre = await Sinistre.findByPk(req.params.id);
+    res.status(200).json({ sinistre });
 };
 
 const createSinistre = async (req, res) => {
     const transaction = await dbInstance.transaction();
     try {
-        const Sinistre = await Sinistre.create(req.body, { transaction });
+        const sinistre = await Sinistre.create(req.body, { transaction });
         await transaction.commit();
-        res.status(201).json({ Sinistre });
+        res.status(201).json({ sinistre });
     } catch (err) {
         await transaction.rollback();
         res.status(400).json({ message: err.message });

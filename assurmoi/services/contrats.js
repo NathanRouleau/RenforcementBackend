@@ -13,9 +13,9 @@ const getContrat = async (req, res) => {
 const createContrat = async (req, res) => {
     const transaction = await dbInstance.transaction();
     try {
-        const Contrat = await Contrat.create(req.body, { transaction });
+        const contrat = await Contrat.create(req.body, { transaction });
         await transaction.commit();
-        res.status(201).json({ Contrat });
+        res.status(201).json({ contrat });
     } catch (err) {
         await transaction.rollback();
         res.status(400).json({ message: err.message });

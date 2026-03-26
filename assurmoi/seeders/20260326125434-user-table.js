@@ -6,19 +6,19 @@ require('dotenv').config()
 module.exports = {
   async up (queryInterface, Sequelize) {
     const hashedpassword = await bcrypt.hash('MotDeP@ss123', parseInt(process.env.BCRYPT_SALT))
-    await queryInterface.bulkInsert('User', [
+    await queryInterface.bulkInsert('Users', [
       {
-        username: 'saittirite',
+        username: 'nathan',
         password: hashedpassword,
-        firstname: 'Soufian',
-        lastname: 'AIT TIRITE',
-        email: 's.aittirite@websociety.fr',
+        firstname: 'Nathan',
+        lastname: 'ROULEAU',
+        email: 'nathan7.rouleau@gmail.com',
         role: 'superadmin'
       }
     ], {})
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('User', { username: 'saittirite' })
+    await queryInterface.bulkDelete('Users', { username: 'nathan' })
   }
 };

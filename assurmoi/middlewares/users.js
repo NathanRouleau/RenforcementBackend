@@ -6,9 +6,9 @@ async function validateUsername(req, res, next) {
     }).run(req);
 
     if(hasError.isEmpty()) {
-        next();
+        return next();
     }
-    res.status(400).json({ 
+    return res.status(400).json({ 
         message: 'missing username'
     });
 

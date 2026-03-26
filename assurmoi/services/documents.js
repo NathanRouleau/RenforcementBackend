@@ -13,9 +13,9 @@ const getDocument = async (req, res) => {
 const createDocument = async (req, res) => {
     const transaction = await dbInstance.transaction();
     try {
-        const Document = await Document.create(req.body, { transaction });
+        const document = await Document.create(req.body, { transaction });
         await transaction.commit();
-        res.status(201).json({ Document });
+        res.status(201).json({ document });
     } catch (err) {
         await transaction.rollback();
         res.status(400).json({ message: err.message });
