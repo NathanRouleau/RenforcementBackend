@@ -12,6 +12,7 @@ module.exports = {
       },
       username: {
         type: Sequelize.STRING,
+        unique: true,
         allowNull: false,
       },
       password: {
@@ -29,6 +30,29 @@ module.exports = {
       email: {
         type: Sequelize.STRING,
       },
+      role: {
+          type: Sequelize.ENUM,
+          values: ['superadmin', 'manager', 'sinister_manager', 'request_manager', 'insured'],
+          allowNull: false,
+          defaultValue: 'insured'
+        },
+        token: {
+          type: Sequelize.TEXT,
+          allowNull: true
+        },
+        refresh_token: {
+          type: Sequelize.TEXT,
+          allowNull: true
+        },
+        two_step_code: {
+          type: Sequelize.STRING,
+          allowNull: true
+        },
+        active:  {
+          type: Sequelize.BOOLEAN,
+          allowNull: false,
+          defaultValue: true
+        },
       // person_id: {
       //   type: Sequelize.INTEGER,
       //   references: {
