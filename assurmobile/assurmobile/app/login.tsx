@@ -18,10 +18,11 @@ export default function LoginScreen() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username,
-                    password
+                    username: username,
+                    password: password
                 })
             });
+                
             console.log('Login', response)
             if (!response.ok) {
                 setError('Echec de la connexion');
@@ -29,7 +30,7 @@ export default function LoginScreen() {
             }
 
             const data = await response.json();
-            setUser(data);
+            await setUser(data);
             router.replace('/');
         } catch (error) {
             console.error('Error logging in:', error);

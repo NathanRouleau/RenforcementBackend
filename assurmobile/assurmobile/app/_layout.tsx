@@ -15,6 +15,10 @@ export default function RootLayout() {
             'Connexion' 
             }} 
           />
+          <Stack.Screen name="sinistre/[id]" options={{ title: 
+            'Détail sinistre' 
+            }} 
+          />
         </Stack>
       </UserProvider>
     </PaperProvider>

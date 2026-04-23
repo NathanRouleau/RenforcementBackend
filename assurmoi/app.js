@@ -5,11 +5,12 @@ const cors = require('cors');
 const initRoutes = require('./routes/index');
 
 const PORT = process.env.PORT || 3000;
-app.use(express.json());
-app.use(cors({
-    credentials: true,
-    origin: 'http://localhost:8081' 
-}))
+app.use(express.json())
+    app.use(cors({
+        origin: true,
+        credentials: true
+    })
+)
 
 initRoutes(app);
 
