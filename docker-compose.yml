@@ -9,9 +9,9 @@ services:
     depends_on:
        - 'app-assurmoi-db'
        - 'app-assurmoi-mailhog'
-    links:
-       - 'app-assurmoi-db:db'
-       - 'app-assurmoi-mailhog:mailhog'
+    # links:
+    #    - 'app-assurmoi-db:db'
+    #    - 'app-assurmoi-mailhog:mailhog'
     environment:
       - NODE_ENV=development
     volumes:
@@ -19,10 +19,11 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - default
+      - app-network 
     expose:
       - "3000"
     working_dir: '/home/app/assurmoi'
+    
   # SMTP server
   app-assurmoi-mailhog:
     image: mailhog/mailhog
@@ -38,9 +39,35 @@ services:
       MARIADB_DATABASE: assurmoidb
     volumes:
       - './db-data:/var/lib/mysql:rw'
+    networks:
+      - app-network 
+  
   # Database client
   app-assurmoi-adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
+    networks:
+      - app-network 
+  
+  # react native environnement
+  app-assurmoi-app: 
+    container_name: "app-assurmoi-reactnative"
+    build:
+      context: ./
+      dockerfile: Dockerfile.front
+    command: 'npm run start'
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "8081:8081"
+    volumes:
+      - './assurmobile:/home/app'
+    working_dir: '/home/app/assurmobile'
+    networks:
+      - app-network 
+
+networks:
+  app-network:
+    driver: bridge

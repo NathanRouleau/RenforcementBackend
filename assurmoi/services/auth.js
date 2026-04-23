@@ -1,6 +1,7 @@
 const { User } = require("../models")
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const {sendLoginAlertEmail} = require('../utils/mailer')
 require('dotenv').config()
 
 const login = async (req, res) => {
@@ -22,6 +23,8 @@ const login = async (req, res) => {
 
         user.token = token
         await user.save()
+
+        await sendLoginAlertEmail(user)
 
         return res.status(200).json({
             token
