@@ -3,19 +3,21 @@ import { router } from "expo-router";
 
 type Headers = {
     Accept: string,
-    'Content-type': string,
-    Authorization?: string
+    'Content-type'?: string,
+    Authorization?: string,
+    'ngrok-skip-browser-warning'?: string
 }
 
-const BASE_URL = 'https://spectrum-eagle-underarm.ngrok-free.dev';
-const API_BASE_URL_CONST = 'http://localhost:3000';
+// const API_BASE_URL_CONST = 'https://spectrum-eagle-underarm.ngrok-free.dev';
+const API_BASE_URL_CONST = 'http://127.0.0.1:3000';
 
 export default async function fetchData(path: string, method: string, body?: object, useToken?: boolean) {
     const token = await storage.getItem('token');
-    const endpoint = API_BASE_URL_CONST
+    const endpoint = API_BASE_URL_CONST;
     const headers: Headers = {
         'Accept': 'application/json',
-        'Content-type': 'application/json'
+        'Content-type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
     }
     if(token !== undefined && useToken) {
         headers['Authorization'] = 'Bearer ' + token;
@@ -51,7 +53,7 @@ export async function fetchDocument(path: string, method: string, body?: any, us
     const endpoint = API_BASE_URL_CONST
     const headers: Headers = {
         'Accept': 'application/json',
-        'Content-type': 'multipart/form-data'
+        'ngrok-skip-browser-warning': 'true'
     }
     if(token !== undefined && useToken) {
         headers['Authorization'] = 'Bearer ' + token;

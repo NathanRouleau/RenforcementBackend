@@ -17,7 +17,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const getAllDocuments = async (req, res) => {
-    const documents = await Document.findAll();
+    const where = {};
+    if (req.query.sinistre_id) where.sinistre_id = req.query.sinistre_id;
+    const documents = await Document.findAll({ where });
     res.status(200).json({ documents });
 };
 
@@ -33,10 +35,10 @@ const createDocument = async (req, res) => {
         if (!req.file) return res.status(400).json({ message: 'Aucun fichier reçu' });
 
         const document = await Document.create({
-            ...req.body,
-            file_path: req.file.path,
-            file_name: req.file.originalname,
-            mime_type: req.file.mimetype,
+            sinistre_id: req.body.sinistre_id || req.body.sinistreId,
+            type_document: req.body.type_document || req.body.label || 'Document Non Spécifié',
+            chemin_fichier: req.file.path,
+            est_valide: false
         }, { transaction });
 
         await transaction.commit();

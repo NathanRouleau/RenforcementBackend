@@ -1,190 +1,132 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, View, StyleSheet, Platform, TouchableOpacity } from "react-native";
-import { Text, Card, ActivityIndicator, Button, Divider, TextInput } from "react-native-paper";
-import fetchData, { fetchDocument } from "@/hooks/fetchData";
-import * as DocumentPicker from 'expo-document-picker';
+import { ScrollView, View, StyleSheet } from "react-native";
+import { Text, Card, ActivityIndicator, Button, Divider } from "react-native-paper";
+import { useApi } from "@/hooks/useApi";
+import { Sinistre } from "@/models/types";
+import StatusBadge from "@/components/StatusBadge";
+import DetailRow from "@/components/DetailRow";
+import DocumentUploadForm from "@/components/DocumentUploadForm";
+import fetchData from "@/hooks/fetchData";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-type Sinistre = {
-  id: number;
-  assure_id: number;
-  contrat_id: number;
-  immatriculation_vehicule: string;
-  nom_prenom_conducteur: string;
-  is_conducteur_assure: boolean;
-  date_heure_appel: string | null;
-  date_heure_sinistre: string;
-  contexte: string;
-  responsabilite_engagee: boolean;
-  pourcentage_responsabilite: number;
-  statut: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-const statutStyle: Record<string, { bg: string; text: string }> = {
-  'En attente de validation': { bg: '#FAEEDA', text: '#854F0B' },
-  'Brouillon':                { bg: '#F1EFE8', text: '#5F5E5A' },
-  'Validé':                   { bg: '#EAF3DE', text: '#3B6D11' },
-  'Refusé':                   { bg: '#FCEBEB', text: '#A32D2D' },
-};
-
-const formatDate = (iso: string | null) =>
+const formatDate = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function SinistreDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [sinistre, setSinistre] = useState<Sinistre | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [pickedFile, setPickedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
-  const [ documentLabel, setDocumentLabel ] = useState('')
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error, request } = useApi<Sinistre>();
+  const [documents, setDocuments] = useState<any[]>([]);
 
-  const pickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ 
-      multiple: false, 
-    });
-    if(result.canceled) {
-      return;
-    }
-    setPickedFile(result.assets[0]);
-  } 
+  const fetchDetail = () => {
+      request(`/sinistres/${id}`);
+      fetchData(`/documents?sinistre_id=${id}`, 'GET', undefined, true)
+        .then(res => setDocuments(res.documents || []))
+        .catch(() => {});
+  };
 
-  const submitForm = () => {
-      const formData = new FormData();
-      formData.append("label", documentLabel);
-      if(pickedFile) {
-          if(Platform.OS === "web") {
-              // cas de la version web
-              const webfile = (pickedFile as DocumentPicker.DocumentPickerAsset & {file?: File}).file;
-              if (webfile) formData.append("file", webfile)
-          } else {
-              // toutes les autres plateformes
-              formData.append("file", {
-                  uri: pickedFile.uri,
-                  name: pickedFile.name,
-                  type: pickedFile.mimeType || 'application/octet-stream'
-              } as unknown as Blob)
-          }
-          setError(null);
-          fetchDocument('/documents', 'POST', formData, true)
-              .then(response => console.log(response))
-              .catch(error => {
-                  console.log(error),
-                  setError(error.message)
-              })
-      } else {
-          setError('Pas de fichier sélectionné');
-      }
-    }
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  };
 
   useEffect(() => {
-    fetchData(`/sinistres/${id}`, 'GET')
-      .then(data => setSinistre(data.sinistre ?? data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    fetchDetail();
   }, [id]);
 
-  if (loading) return <ActivityIndicator style={{ marginTop: 60 }} />;
+  if (loading && !data) return <ActivityIndicator style={{ marginTop: 60 }} size="large" color="#185FA5" />;
   
-  if (!sinistre) return (
+  if (error) return (
     <View style={styles.centered}>
-      <Text>Sinistre introuvable.</Text>
-      <Button onPress={() => router.back()}>Retour</Button>
+      <Text style={{color: '#A32D2D', fontWeight: 'bold'}}>{error}</Text>
+      <Text style={{color: '#555', textAlign: 'center', marginTop: 8}}>Est-ce qu'une extension navigateur ou le mode offline bloquent la requête ?</Text>
+      <Button onPress={handleBack} mode="contained" style={{marginTop: 16}}>Retour</Button>
     </View>
   );
 
-  const style = statutStyle[sinistre.statut] ?? { bg: '#F1EFE8', text: '#5F5E5A' };
+  if (!data && !loading) return (
+    <View style={styles.centered}>
+      <Text>Sinistre introuvable.</Text>
+      <Button onPress={handleBack} mode="contained">Retour</Button>
+    </View>
+  );
+
+  const sinistre = (data as any).sinistre ?? data;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
 
       <View style={styles.topRow}>
         <Text style={styles.idText}>Sinistre #{sinistre.id}</Text>
-        <View style={[styles.badge, { backgroundColor: style.bg }]}>
-          <Text style={[styles.badgeText, { color: style.text }]}>{sinistre.statut}</Text>
-        </View>
+        <StatusBadge statut={sinistre.statut} />
       </View>
 
-      {/* Véhicule & conducteur */}
-      <Card style={styles.card}>
+      <Card style={styles.card} mode="elevated" elevation={1}>
         <Card.Content>
           <Text style={styles.sectionTitle}>Véhicule & conducteur</Text>
           <Divider style={styles.divider} />
-          <Row label="Immatriculation"   value={sinistre.immatriculation_vehicule} />
-          <Row label="Conducteur"        value={sinistre.nom_prenom_conducteur} />
-          <Row label="Conducteur assuré" value={sinistre.is_conducteur_assure ? 'Oui' : 'Non'} />
+          <DetailRow label="Immatriculation"   value={sinistre.immatriculation_vehicule} />
+          <DetailRow label="Conducteur"        value={sinistre.nom_prenom_conducteur} />
+          <DetailRow label="Conducteur assuré" value={sinistre.is_conducteur_assure ? 'Oui' : 'Non'} />
         </Card.Content>
       </Card>
 
-      {/* Dates */}
-      <Card style={styles.card}>
+      <Card style={styles.card} mode="elevated" elevation={1}>
         <Card.Content>
           <Text style={styles.sectionTitle}>Dates</Text>
           <Divider style={styles.divider} />
-          <Row label="Date du sinistre" value={formatDate(sinistre.date_heure_sinistre)} />
-          <Row label="Date d'appel"     value={formatDate(sinistre.date_heure_appel)} />
-          <Row label="Créé le"          value={formatDate(sinistre.createdAt)} />
-          <Row label="Mis à jour le"    value={formatDate(sinistre.updatedAt)} />
+          <DetailRow label="Date du sinistre" value={formatDate(sinistre.date_heure_sinistre)} />
+          <DetailRow label="Date d'appel"     value={formatDate(sinistre.date_heure_appel)} />
+          <DetailRow label="Créé le"          value={formatDate(sinistre.createdAt)} />
+          <DetailRow label="Mis à jour le"    value={formatDate(sinistre.updatedAt)} />
         </Card.Content>
       </Card>
 
-      {/* Responsabilité */}
-      <Card style={styles.card}>
+      <Card style={styles.card} mode="elevated" elevation={1}>
         <Card.Content>
           <Text style={styles.sectionTitle}>Responsabilité</Text>
           <Divider style={styles.divider} />
-          <Row label="Engagée"     value={sinistre.responsabilite_engagee ? 'Oui' : 'Non'} />
-          <Row label="Pourcentage" value={`${sinistre.pourcentage_responsabilite}%`} />
+          <DetailRow label="Engagée"     value={sinistre.responsabilite_engagee ? 'Oui' : 'Non'} />
+          <DetailRow label="Pourcentage" value={`${sinistre.pourcentage_responsabilite}%`} />
         </Card.Content>
       </Card>
 
-      {/* Pick Document */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>ENVOYER UN DOCUMENT</Text>
-          <Divider style={styles.divider} />
-
-          <Text style={styles.inputLabel}>Libellé du document</Text>
-          <TextInput
-            value={documentLabel ?? ''}
-            onChangeText={setDocumentLabel}
-            mode="outlined"
-            placeholder="Ex : Constat amiable, Facture réparation…"
-            style={styles.input}
-            outlineStyle={{ borderRadius: 8 }}
-            theme={{ colors: { background: '#fff' } }}
-          />
-
-          <TouchableOpacity style={styles.pickBtn} onPress={pickDocument}>
-            <Text style={styles.pickBtnText}>⬆  Choisir un fichier</Text>
-          </TouchableOpacity>
-
-          {pickedFile && (
-            <View style={styles.fileInfo}>
-              <Text style={styles.fileName} numberOfLines={1}>{pickedFile.name}</Text>
-              <Text style={styles.fileSize}>
-                {pickedFile.size ? `${(pickedFile.size / 1024).toFixed(1)} Ko` : ''}
-              </Text>
+      {/* Section des documents listés */}
+      {documents.length > 0 && (
+        <Card style={styles.card} mode="elevated" elevation={1}>
+          <Card.Content>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <MaterialCommunityIcons name="folder-multiple" size={20} color="#185FA5" />
+              <Text style={{ fontSize: 15, fontWeight: '600', color: '#185FA5' }}>DOCUMENTS JOINTS ({documents.length})</Text>
             </View>
-          )}
+            <Divider style={{ marginBottom: 12 }} />
+            {documents.map((doc, idx) => (
+              <View key={doc.id} style={{ 
+                  flexDirection: 'row', alignItems: 'center', gap: 12, 
+                  backgroundColor: '#F4F8FA', padding: 12, borderRadius: 8,
+                  marginBottom: idx === documents.length - 1 ? 0 : 8 
+              }}>
+                <MaterialCommunityIcons name="file-document-outline" size={24} color="#555" />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: '#333' }}>{doc.type_document}</Text>
+                  <Text style={{ fontSize: 11, color: '#888' }} numberOfLines={1}>{doc.chemin_fichier ? doc.chemin_fichier.split(/[\/\\]/).pop() : 'Fichier'}</Text>
+                </View>
+                {doc.est_valide ? (
+                  <MaterialCommunityIcons name="check-decagram" size={20} color="#3B6D11" />
+                ) : (
+                  <MaterialCommunityIcons name="clock-outline" size={20} color="#C49B2A" />
+                )}
+              </View>
+            ))}
+          </Card.Content>
+        </Card>
+      )}
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+      {/* Le formulaire d'upload a été refactoré dans DocumentUploadForm */}
+      <DocumentUploadForm sinistreId={sinistre.id} onUploadSuccess={fetchDetail} />
 
-          <TouchableOpacity
-            style={[styles.sendBtn, !pickedFile && styles.sendBtnDisabled]}
-            onPress={submitForm}
-            disabled={!pickedFile}
-          >
-            <Text style={styles.sendBtnText}>Envoyer le document</Text>
-          </TouchableOpacity>
-
-        </Card.Content>
-      </Card>
-
-      {/* Contexte */}
-      <Card style={styles.card}>
+      <Card style={styles.card} mode="elevated" elevation={1}>
         <Card.Content>
           <Text style={styles.sectionTitle}>Contexte</Text>
           <Divider style={styles.divider} />
@@ -192,7 +134,7 @@ export default function SinistreDetailScreen() {
         </Card.Content>
       </Card>
 
-      <Button mode="outlined" onPress={() => router.back()} style={styles.backBtn}>
+      <Button mode="outlined" onPress={handleBack} style={styles.backBtn}>
         Retour à la liste
       </Button>
 
@@ -200,39 +142,14 @@ export default function SinistreDetailScreen() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: '#f5f5f5' },
+  container:    { flex: 1, backgroundColor: '#F0F4F8' },
   centered:     { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  topRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  idText:       { fontSize: 20, fontWeight: '500' },
-  badge:        { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  badgeText:    { fontSize: 12, fontWeight: '500' },
-  card:         { marginBottom: 12, borderRadius: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: '500', color: '#555', marginBottom: 8 },
-  divider:      { marginBottom: 10 },
-  row:          { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  label:        { fontSize: 13, color: '#888' },
-  value:        { fontSize: 13, fontWeight: '500', maxWidth: '60%', textAlign: 'right' },
-  contexte:     { fontSize: 14, lineHeight: 22, color: '#333' },
-  backBtn:      { marginTop: 8, marginBottom: 32 },
-  inputLabel:   { fontSize: 12, color: '#888', marginBottom: 4 },
-  input:        { marginBottom: 14, backgroundColor: '#fff', fontSize: 14 },
-  pickBtn:      { borderWidth: 1, borderColor: '#ccc', borderStyle: 'dashed', borderRadius: 8, padding: 12, alignItems: 'center', marginBottom: 12, backgroundColor: '#fafafa' },
-  pickBtnText:  { fontSize: 14, color: '#555' },
-  fileInfo:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EAF3DE', padding: 10, borderRadius: 8, marginBottom: 12 },
-  fileName:     { fontSize: 13, color: '#27500A', flex: 1, marginRight: 8 },
-  fileSize:     { fontSize: 12, color: '#3B6D11' },
-  errorText:    { color: '#A32D2D', fontSize: 13, marginBottom: 8 },
-  sendBtn:      { backgroundColor: '#185FA5', borderRadius: 8, padding: 13, alignItems: 'center' },
-  sendBtnDisabled: { backgroundColor: '#ccc' },
-  sendBtnText:  { color: '#fff', fontSize: 14, fontWeight: '500' },
+  topRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  idText:       { fontSize: 24, fontWeight: 'bold', color: '#1B2A4A' },
+  card:         { marginBottom: 16, borderRadius: 12, backgroundColor: '#ffffff' },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#555', marginBottom: 8, textTransform: 'uppercase' },
+  divider:      { marginBottom: 8 },
+  contexte:     { fontSize: 15, lineHeight: 24, color: '#333' },
+  backBtn:      { marginTop: 12, borderRadius: 8, borderColor: '#ccc' },
 });
