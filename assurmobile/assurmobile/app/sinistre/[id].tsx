@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, View, StyleSheet } from "react-native";
-import { Text, Card, ActivityIndicator, Button, Divider } from "react-native-paper";
-import fetchData from "@/hooks/fetchData";
+import { ScrollView, View, StyleSheet, Platform, TouchableOpacity } from "react-native";
+import { Text, Card, ActivityIndicator, Button, Divider, TextInput } from "react-native-paper";
+import fetchData, { fetchDocument } from "@/hooks/fetchData";
+import * as DocumentPicker from 'expo-document-picker';
 
 type Sinistre = {
   id: number;
@@ -36,6 +37,47 @@ export default function SinistreDetailScreen() {
   const router = useRouter();
   const [sinistre, setSinistre] = useState<Sinistre | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pickedFile, setPickedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [ documentLabel, setDocumentLabel ] = useState('')
+  const [error, setError] = useState<string | null>(null);
+
+  const pickDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ 
+      multiple: false, 
+    });
+    if(result.canceled) {
+      return;
+    }
+    setPickedFile(result.assets[0]);
+  } 
+
+  const submitForm = () => {
+      const formData = new FormData();
+      formData.append("label", documentLabel);
+      if(pickedFile) {
+          if(Platform.OS === "web") {
+              // cas de la version web
+              const webfile = (pickedFile as DocumentPicker.DocumentPickerAsset & {file?: File}).file;
+              if (webfile) formData.append("file", webfile)
+          } else {
+              // toutes les autres plateformes
+              formData.append("file", {
+                  uri: pickedFile.uri,
+                  name: pickedFile.name,
+                  type: pickedFile.mimeType || 'application/octet-stream'
+              } as unknown as Blob)
+          }
+          setError(null);
+          fetchDocument('/documents', 'POST', formData, true)
+              .then(response => console.log(response))
+              .catch(error => {
+                  console.log(error),
+                  setError(error.message)
+              })
+      } else {
+          setError('Pas de fichier sélectionné');
+      }
+    }
 
   useEffect(() => {
     fetchData(`/sinistres/${id}`, 'GET')
@@ -45,6 +87,7 @@ export default function SinistreDetailScreen() {
   }, [id]);
 
   if (loading) return <ActivityIndicator style={{ marginTop: 60 }} />;
+  
   if (!sinistre) return (
     <View style={styles.centered}>
       <Text>Sinistre introuvable.</Text>
@@ -97,6 +140,49 @@ export default function SinistreDetailScreen() {
         </Card.Content>
       </Card>
 
+      {/* Pick Document */}
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text style={styles.sectionTitle}>ENVOYER UN DOCUMENT</Text>
+          <Divider style={styles.divider} />
+
+          <Text style={styles.inputLabel}>Libellé du document</Text>
+          <TextInput
+            value={documentLabel ?? ''}
+            onChangeText={setDocumentLabel}
+            mode="outlined"
+            placeholder="Ex : Constat amiable, Facture réparation…"
+            style={styles.input}
+            outlineStyle={{ borderRadius: 8 }}
+            theme={{ colors: { background: '#fff' } }}
+          />
+
+          <TouchableOpacity style={styles.pickBtn} onPress={pickDocument}>
+            <Text style={styles.pickBtnText}>⬆  Choisir un fichier</Text>
+          </TouchableOpacity>
+
+          {pickedFile && (
+            <View style={styles.fileInfo}>
+              <Text style={styles.fileName} numberOfLines={1}>{pickedFile.name}</Text>
+              <Text style={styles.fileSize}>
+                {pickedFile.size ? `${(pickedFile.size / 1024).toFixed(1)} Ko` : ''}
+              </Text>
+            </View>
+          )}
+
+          {error && <Text style={styles.errorText}>{error}</Text>}
+
+          <TouchableOpacity
+            style={[styles.sendBtn, !pickedFile && styles.sendBtnDisabled]}
+            onPress={submitForm}
+            disabled={!pickedFile}
+          >
+            <Text style={styles.sendBtnText}>Envoyer le document</Text>
+          </TouchableOpacity>
+
+        </Card.Content>
+      </Card>
+
       {/* Contexte */}
       <Card style={styles.card}>
         <Card.Content>
@@ -138,4 +224,15 @@ const styles = StyleSheet.create({
   value:        { fontSize: 13, fontWeight: '500', maxWidth: '60%', textAlign: 'right' },
   contexte:     { fontSize: 14, lineHeight: 22, color: '#333' },
   backBtn:      { marginTop: 8, marginBottom: 32 },
+  inputLabel:   { fontSize: 12, color: '#888', marginBottom: 4 },
+  input:        { marginBottom: 14, backgroundColor: '#fff', fontSize: 14 },
+  pickBtn:      { borderWidth: 1, borderColor: '#ccc', borderStyle: 'dashed', borderRadius: 8, padding: 12, alignItems: 'center', marginBottom: 12, backgroundColor: '#fafafa' },
+  pickBtnText:  { fontSize: 14, color: '#555' },
+  fileInfo:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EAF3DE', padding: 10, borderRadius: 8, marginBottom: 12 },
+  fileName:     { fontSize: 13, color: '#27500A', flex: 1, marginRight: 8 },
+  fileSize:     { fontSize: 12, color: '#3B6D11' },
+  errorText:    { color: '#A32D2D', fontSize: 13, marginBottom: 8 },
+  sendBtn:      { backgroundColor: '#185FA5', borderRadius: 8, padding: 13, alignItems: 'center' },
+  sendBtnDisabled: { backgroundColor: '#ccc' },
+  sendBtnText:  { color: '#fff', fontSize: 14, fontWeight: '500' },
 });

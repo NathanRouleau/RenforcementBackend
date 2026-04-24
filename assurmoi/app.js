@@ -7,7 +7,10 @@ const initRoutes = require('./routes/index');
 const PORT = process.env.PORT || 3000;
 app.use(express.json())
     app.use(cors({
-        origin: true,
+        origin: (origin, callback) => {
+            // En dev, on accepte tout
+            callback(null, true);
+        },
         credentials: true
     })
 )
